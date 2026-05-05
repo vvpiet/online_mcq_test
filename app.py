@@ -194,12 +194,17 @@ def render_admin_panel():
                     st.error("CSV must contain columns: prn, name, class, branch, semester")
                 else:
                     for _, row in df.iterrows():
+                        try:
+                            semester_val = int(float(str(row["semester"]).strip()))
+                        except (ValueError, TypeError):
+                            st.error(f"Invalid semester value for PRN {row['prn']}: {row['semester']}")
+                            continue
                         upsert_student(
                             str(row["prn"]).strip(),
                             str(row["name"]).strip(),
                             str(row["class"]).strip(),
                             str(row["branch"]).strip(),
-                            int(row["semester"]),
+                            semester_val,
                         )
                     st.success("Student accounts imported successfully.")
         st.write("### Generate exam-day password")
