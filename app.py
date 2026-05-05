@@ -356,7 +356,20 @@ def render_student_panel():
     st.success(f"Logged in as {student['name']} ({student['prn']})")
     papers = list_question_papers(student["branch"], student["semester"], student["class"])
     today = date.today()
-    available = [p for p in papers if p["active"] and (p["schedule_date"] is None or p["schedule_date"] <= today)]
+    available = []
+    for p in papers:
+        if not p["active"]:
+            continue
+        if p["schedule_date"] is None:
+            available.append(p)
+        else:
+            try:
+                sched_date = datetime.strptime(str(p["schedule_date"]), "%Y-%m-%d").date()
+                if sched_date <= today:
+                    available.append(p)
+            except (ValueError, TypeError):
+                # If date parsing fails, include the paper
+                available.append(p)
     if not available:
         st.warning("No active exam paper is available right now.")
         return
