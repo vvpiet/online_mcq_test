@@ -46,6 +46,34 @@ BRANCHES = {
 CLASS_OPTIONS = ["FY", "SY", "TY", "B.Tech", "BCA", "MCA", "M.tech (CSE)", "M.tech (Design)"]
 SEMESTER_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8]
 
+ROMAN_TO_INT = {
+    "I": 1, "II": 2, "III": 3, "IV": 4, "V": 5, "VI": 6, "VII": 7, "VIII": 8,
+    "i": 1, "ii": 2, "iii": 3, "iv": 4, "v": 5, "vi": 6, "vii": 7, "viii": 8,
+}
+
+def convert_semester_to_int(semester_val):
+    """Convert semester from various formats to integer (1-8)"""
+    sem_str = str(semester_val).strip().upper()
+    
+    # Try direct integer conversion
+    try:
+        val = int(float(sem_str))
+        if 1 <= val <= 8:
+            return val
+    except (ValueError, TypeError):
+        pass
+    
+    # Try Roman numeral conversion
+    if sem_str in ROMAN_TO_INT:
+        return ROMAN_TO_INT[sem_str]
+    
+    # Try lowercase Roman numeral
+    sem_lower = str(semester_val).strip().lower()
+    if sem_lower in ROMAN_TO_INT:
+        return ROMAN_TO_INT[sem_lower]
+    
+    return None
+
 
 def page_setup():
     st.set_page_config(page_title="Engineering MCQ Test Portal", layout="wide")
@@ -194,11 +222,12 @@ def render_admin_panel():
                 if not all(col in df.columns for col in ["prn", "name", "class", "branch", "semester"]):
                     st.error("CSV must contain columns: prn, name, class, branch, semester")
                 else:
+                    success_count = 0
+                    error_rows = []
                     for _, row in df.iterrows():
-                        try:
-                            semester_val = int(float(str(row["semester"]).strip()))
-                        except (ValueError, TypeError):
-                            st.error(f"Invalid semester value for PRN {row['prn']}: {row['semester']}")
+                        semester_val = convert_semester_to_int(row["semester"])
+                        if semester_val is None:
+                            error_rows.append(f"PRN {row['prn']}: Invalid semester '{row['semester']}'")
                             continue
                         upsert_student(
                             str(row["prn"]).strip(),
@@ -207,7 +236,12 @@ def render_admin_panel():
                             str(row["branch"]).strip(),
                             semester_val,
                         )
-                    st.success("Student accounts imported successfully.")
+                        success_count += 1
+                    
+                    if error_rows:
+                        st.warning(f"Imported {success_count} students, but had errors:\n" + "\n".join(error_rows))
+                    else:
+                        st.success(f"Student accounts imported successfully. ({success_count} students)")
         st.write("### Generate exam-day password")
         prn = st.text_input("Student PRN for password generation")
         if st.button("Generate password"):
