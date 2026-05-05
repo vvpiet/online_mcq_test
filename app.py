@@ -115,16 +115,34 @@ def render_admin_panel():
                 st.error("Please upload a question file.")
             else:
                 try:
-                    if file.type == "text/csv" or file.name.endswith(".csv"):
+                    filename = str(file.name or "").lower()
+                    if file.type == "text/csv" or filename.endswith(".csv"):
+                        file.seek(0)
                         df = pd.read_csv(
                             file,
+                            encoding="utf-8",
                             engine="python",
                             quotechar='"',
                             skipinitialspace=True,
                             on_bad_lines="warn",
                         )
-                    else:
+                    elif filename.endswith((".xls", ".xlsx")):
+                        file.seek(0)
                         df = pd.read_excel(file)
+                    else:
+                        file.seek(0)
+                        try:
+                            df = pd.read_csv(
+                                file,
+                                encoding="utf-8",
+                                engine="python",
+                                quotechar='"',
+                                skipinitialspace=True,
+                                on_bad_lines="warn",
+                            )
+                        except Exception:
+                            file.seek(0)
+                            df = pd.read_excel(file)
                     df.columns = df.columns.str.lower()
                     required = ["question", "a", "b", "c", "d", "answer"]
                     if not all(col in df.columns.str.lower() for col in required):
