@@ -1,5 +1,6 @@
 import os
 import secrets
+import random
 import io
 import traceback
 from datetime import date, datetime
@@ -213,7 +214,7 @@ def render_admin_panel():
             if not prn:
                 st.error("Enter PRN")
             else:
-                password = secrets.token_urlsafe(6)
+                password = str(random.randint(1000, 9999))
                 set_student_password(prn.strip(), password)
                 st.success("Student password created")
                 st.write("Password for student:", password)
@@ -297,9 +298,6 @@ def render_student_panel():
         if not student:
             st.error("Student record not found. Contact admin.")
             return
-        if student["branch"] != BRANCHES[branch] or student["semester"] != semester or student["class"] != class_name:
-            st.error("Selected branch / semester / class do not match the student record.")
-            return
         if not student["password"]:
             st.error("Password not set by admin yet. Contact your administrator.")
             return
@@ -322,7 +320,7 @@ def render_student_panel():
 
     student = st.session_state.student
     st.success(f"Logged in as {student['name']} ({student['prn']})")
-    papers = list_question_papers(branch, semester, class_name)
+    papers = list_question_papers(student["branch"], student["semester"], student["class"])
     today = date.today()
     available = [p for p in papers if p["active"] and (p["schedule_date"] is None or p["schedule_date"] <= today)]
     if not available:
