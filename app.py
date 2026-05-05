@@ -178,8 +178,10 @@ def render_admin_panel():
             if not file:
                 st.error("Upload a CSV file first.")
             else:
+                file.seek(0)
                 df = pd.read_csv(file)
-                if not all(col in df.columns.str.lower() for col in ["prn", "name", "class", "branch", "semester"]):
+                df.columns = df.columns.str.lower()
+                if not all(col in df.columns for col in ["prn", "name", "class", "branch", "semester"]):
                     st.error("CSV must contain columns: prn, name, class, branch, semester")
                 else:
                     for _, row in df.iterrows():
