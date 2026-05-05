@@ -1,5 +1,7 @@
 import os
 import secrets
+import io
+import traceback
 from datetime import date, datetime
 import pandas as pd
 import streamlit as st
@@ -115,11 +117,18 @@ def render_admin_panel():
                 st.error("Please upload a question file.")
             else:
                 try:
+                    # Convert Streamlit UploadedFile to BytesIO for compatibility
+                    if hasattr(file, 'read'):
+                        file_bytes = file.read()
+                        file.seek(0)  # Reset for potential re-reads
+                    else:
+                        file_bytes = file
+                    
                     filename = str(file.name or "").lower()
+                    
                     if file.type == "text/csv" or filename.endswith(".csv"):
-                        file.seek(0)
                         df = pd.read_csv(
-                            file,
+                            io.BytesIO(file_bytes),
                             encoding="utf-8",
                             engine="python",
                             quotechar='"',
@@ -127,13 +136,12 @@ def render_admin_panel():
                             on_bad_lines="warn",
                         )
                     elif filename.endswith((".xls", ".xlsx")):
-                        file.seek(0)
-                        df = pd.read_excel(file)
+                        df = pd.read_excel(io.BytesIO(file_bytes))
                     else:
-                        file.seek(0)
+                        # Try CSV first, then Excel
                         try:
                             df = pd.read_csv(
-                                file,
+                                io.BytesIO(file_bytes),
                                 encoding="utf-8",
                                 engine="python",
                                 quotechar='"',
@@ -141,27 +149,28 @@ def render_admin_panel():
                                 on_bad_lines="warn",
                             )
                         except Exception:
-                            file.seek(0)
-                            df = pd.read_excel(file)
+                            df = pd.read_excel(io.BytesIO(file_bytes))
+                    
                     df.columns = df.columns.str.lower()
                     required = ["question", "a", "b", "c", "d", "answer"]
-                    if not all(col in df.columns.str.lower() for col in required):
+                    if not all(col in df.columns for col in required):
                         st.error("Uploaded file must contain columns: question, a, b, c, d, answer")
                     else:
                         paper_id = create_question_paper(paper_title, branch, semester, class_name, schedule_date, duration)
                         for _, row in df.iterrows():
                             add_question(
                                 paper_id,
-                                str(row.get("question", "")).strip(),
-                                str(row.get("a", "")).strip(),
-                                str(row.get("b", "")).strip(),
-                                str(row.get("c", "")).strip(),
-                                str(row.get("d", "")).strip(),
-                                str(row.get("answer", "")).strip(),
+                                str(row["question"]).strip() if "question" in row.index else "",
+                                str(row["a"]).strip() if "a" in row.index else "",
+                                str(row["b"]).strip() if "b" in row.index else "",
+                                str(row["c"]).strip() if "c" in row.index else "",
+                                str(row["d"]).strip() if "d" in row.index else "",
+                                str(row["answer"]).strip() if "answer" in row.index else "",
                             )
                         st.success("Question paper uploaded and converted to MCQs.")
                 except Exception as exc:
-                    st.error(f"Unable to parse upload: {exc}")
+                    st.error(f"Unable to parse upload: {str(exc)}")
+                    st.error(f"Error details: {traceback.format_exc()}")
 
         st.write("### Existing question papers")
         papers = list_question_papers()
