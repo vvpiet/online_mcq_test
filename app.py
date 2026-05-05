@@ -267,9 +267,9 @@ def render_admin_panel():
         branch = st.selectbox("Branch filter", ["All"] + list(BRANCHES.keys()))
         class_name = st.selectbox("Class filter", ["All"] + CLASS_OPTIONS)
         if st.button("Load results"):
-            branch_filter = None if branch == "All" else branch
+            branch_filter = None if branch == "All" else BRANCHES[branch]
             class_filter = None if class_name == "All" else class_name
-            results = list_test_results(branch_filter, class_filter)
+            results = list_test_results(branch=branch_filter, class_name=class_filter)
             if results:
                 df = pd.DataFrame(results)
                 st.dataframe(df)
