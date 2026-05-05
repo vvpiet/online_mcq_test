@@ -439,11 +439,20 @@ def render_exam(paper):
         qid = question["id"]
         st.subheader(f"Question {idx}")
         st.write(question['question'])
+        # Use index parameter to avoid showing red dot on default selection
+        current_selection = st.session_state.get(f"q_{qid}")
+        index = None
+        if current_selection:
+            try:
+                index = ["a", "b", "c", "d"].index(current_selection)
+            except (ValueError, IndexError):
+                index = None
         responses[f"q_{qid}"] = st.radio(
             "Select your answer:",
             options=["a", "b", "c", "d"],
             format_func=lambda x, q=question: f"{x}) {q['option_' + x]}",
             key=f"q_{qid}",
+            index=index,
             label_visibility="collapsed"
         )
     if st.button("Submit exam"):
@@ -470,6 +479,10 @@ def evaluate_exam(paper):
     st.balloons()
     st.session_state.exam_active = False
     st.session_state.started_at = None
+    st.session_state.logged_in = False
+    st.session_state.student = None
+    st.info("You have been logged out. Redirecting to login page...")
+    _safe_rerun()
 
 
 def main():
