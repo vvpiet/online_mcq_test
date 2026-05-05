@@ -49,6 +49,15 @@ def page_setup():
     st.title("Engineering College Online MCQ Test Portal")
 
 
+def _safe_rerun():
+    if hasattr(st, "experimental_rerun"):
+        st.experimental_rerun()
+    elif hasattr(st, "rerun"):
+        st.rerun()
+    else:
+        st.stop()
+
+
 @st.cache_resource
 def load_startup():
     init_db()
@@ -68,7 +77,7 @@ def render_admin_panel():
         if st.button("Login"):
             if authenticate_admin(username.strip(), password.strip()):
                 st.session_state.admin_logged_in = True
-                st.experimental_rerun()
+                _safe_rerun()
             else:
                 st.error("Invalid admin credentials")
         return
@@ -265,7 +274,7 @@ def render_student_panel():
         st.session_state.student = student
         st.session_state.logged_in = True
         st.session_state.client_ip = client_ip.strip()
-        st.experimental_rerun()
+        _safe_rerun()
 
     if "logged_in" not in st.session_state or not st.session_state.logged_in:
         st.info("Login with PRN, branch, semester, class and exam password. Your assigned IP prefix must match admin settings.")
@@ -286,7 +295,7 @@ def render_student_panel():
         st.session_state.paper_id = active_paper["id"]
         st.session_state.exam_active = True
         st.session_state.warnings = 0
-        st.experimental_rerun()
+        _safe_rerun()
 
     if "exam_active" in st.session_state and st.session_state.exam_active:
         if st.session_state.paper_id != active_paper["id"]:
