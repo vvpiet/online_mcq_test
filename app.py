@@ -389,7 +389,7 @@ def render_student_panel():
 
 
 def render_exam(paper):
-    query_params = st.experimental_get_query_params()
+    query_params = st.query_params
     if query_params.get("auto_submit"):
         st.session_state.auto_submit = True
 
