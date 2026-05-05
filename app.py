@@ -454,7 +454,7 @@ def evaluate_exam(paper):
     if "session_id" not in st.session_state:
         st.error("Exam session missing.")
         return
-    questions = get_questions_for_paper(paper["id"])
+    questions = get_questions_for_paper(paper["id"], hide_answers=False)
     score = 0
     for question in questions:
         selected = st.session_state.get(f"q_{question['id']}")

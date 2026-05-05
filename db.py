@@ -290,10 +290,19 @@ def list_question_papers(branch: str = None, semester: int = None, class_name: s
         return [dict(row) for row in rows]
 
 
-def get_questions_for_paper(paper_id: int):
+def get_questions_for_paper(paper_id: int, hide_answers: bool = True):
     with get_conn() as conn:
         cursor = conn.cursor(cursor_factory=RealDictCursor)
-        cursor.execute("SELECT * FROM questions WHERE paper_id = %s ORDER BY id", (paper_id,))
+        if hide_answers:
+            cursor.execute(
+                "SELECT id, paper_id, question, option_a, option_b, option_c, option_d FROM questions WHERE paper_id = %s ORDER BY id", 
+                (paper_id,)
+            )
+        else:
+            cursor.execute(
+                "SELECT * FROM questions WHERE paper_id = %s ORDER BY id", 
+                (paper_id,)
+            )
         rows = cursor.fetchall()
         cursor.close()
         return [dict(row) for row in rows]
@@ -334,8 +343,8 @@ def submit_test_session(session_id: int, score: int, max_score: int, percentage:
 
 
 def list_test_results(branch: str = None, semester: int = None, class_name: str = None):
-    conditions = ["ts.status = 'completed'"]
-    params = []
+    conditions = ["ts.status = %s"]
+    params = ["completed"]
     if branch:
         conditions.append("s.branch = %s")
         params.append(branch)
@@ -346,19 +355,17 @@ def list_test_results(branch: str = None, semester: int = None, class_name: str 
         conditions.append("s.class = %s")
         params.append(class_name)
     where = "WHERE " + " AND ".join(conditions)
+    query = f"""
+        SELECT s.prn, s.name, s.class, s.branch, s.semester, qp.title, ts.score, ts.max_score, ts.percentage, ts.completed_at
+        FROM test_sessions ts
+        JOIN students s ON ts.student_id = s.id
+        JOIN question_papers qp ON ts.paper_id = qp.id
+        {where}
+        ORDER BY ts.completed_at DESC
+    """
     with get_conn() as conn:
         cursor = conn.cursor(cursor_factory=RealDictCursor)
-        cursor.execute(
-            f"""
-            SELECT s.prn, s.name, s.class, s.branch, s.semester, qp.title, ts.score, ts.max_score, ts.percentage, ts.completed_at
-            FROM test_sessions ts
-            JOIN students s ON ts.student_id = s.id
-            JOIN question_papers qp ON ts.paper_id = qp.id
-            {where}
-            ORDER BY ts.completed_at DESC
-            """,
-            tuple(params)
-        )
+        cursor.execute(query, tuple(params))
         rows = cursor.fetchall()
         cursor.close()
         return [dict(row) for row in rows]
