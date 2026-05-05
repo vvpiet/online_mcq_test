@@ -140,7 +140,7 @@ def get_admin_count() -> int:
         with conn.cursor() as cur:
             cur.execute("SELECT COUNT(*) FROM admins")
             row = cur.fetchone()
-            return row[0]
+            return row["count"] if row and "count" in row else 0
 
 
 def add_allowed_network(prefix: str, description: str = None):
@@ -175,7 +175,7 @@ def get_exam_setting(key: str, default=None):
         with conn.cursor() as cur:
             cur.execute("SELECT value FROM exam_settings WHERE key=%s", (key,))
             row = cur.fetchone()
-            return row[0] if row else default
+            return row["value"] if row and "value" in row else default
 
 
 def upsert_student(prn: str, name: str, class_name: str, branch: str, semester: int, password: str = None):
