@@ -311,23 +311,24 @@ def create_test_session(student_id: int, paper_id: int, ip_address: str):
     return session_id
 
 
-def save_answer(session_id: int, question_id: int, selected_option: str):
+def save_answer(session_id: int, question_id: int, selected_option: str, correct: bool = None):
     with get_conn() as conn:
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO answers (session_id, question_id, selected_option) VALUES (%s, %s, %s)",
-            (session_id, question_id, selected_option),
+            "INSERT INTO answers (session_id, question_id, selected_option, correct) VALUES (%s, %s, %s, %s)",
+            (session_id, question_id, selected_option, correct),
         )
         cursor.close()
 
 
-def submit_test_session(session_id: int, score: int, max_score: int):
-    percentage = (score / max_score * 100) if max_score > 0 else 0
+def submit_test_session(session_id: int, score: int, max_score: int, percentage: float = None, warnings: int = 0):
+    if percentage is None:
+        percentage = (score / max_score * 100) if max_score > 0 else 0
     with get_conn() as conn:
         cursor = conn.cursor()
         cursor.execute(
-            "UPDATE test_sessions SET completed_at=%s, score=%s, max_score=%s, percentage=%s, status=%s WHERE id=%s",
-            (datetime.now(), score, max_score, percentage, "completed", session_id),
+            "UPDATE test_sessions SET completed_at=%s, score=%s, max_score=%s, percentage=%s, status=%s, warnings=%s WHERE id=%s",
+            (datetime.now(), score, max_score, percentage, "completed", warnings, session_id),
         )
         cursor.close()
 

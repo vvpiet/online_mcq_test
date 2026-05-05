@@ -76,7 +76,7 @@ def convert_semester_to_int(semester_val):
 
 
 def page_setup():
-    st.set_page_config(page_title="Engineering MCQ Test Portal", layout="wide")
+    st.set_page_config(page_title="Engineering MCQ Test Portal", layout="wide", initial_sidebar_state="collapsed")
     st.title("Engineering College Online MCQ Test Portal")
 
 
@@ -389,6 +389,25 @@ def render_student_panel():
 
 
 def render_exam(paper):
+    # Hide sidebar and maximize space for exam
+    st.markdown("""
+    <style>
+        [data-testid="stSidebar"] {
+            display: none;
+        }
+        [data-testid="stHeader"] {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+        .main {
+            padding-top: 60px;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+    
     query_params = st.query_params
     if query_params.get("auto_submit"):
         st.session_state.auto_submit = True
@@ -416,13 +435,16 @@ def render_exam(paper):
     components.html(get_proctor_html(), height=260)
     questions = get_questions_for_paper(paper["id"])
     responses = {}
-    for question in questions:
+    for idx, question in enumerate(questions, 1):
         qid = question["id"]
+        st.subheader(f"Question {idx}")
+        st.write(question['question'])
         responses[f"q_{qid}"] = st.radio(
-            f"{question['question']}",
+            "Select your answer:",
             options=["a", "b", "c", "d"],
-            format_func=lambda x, q=question: f"{x}) {q['option_' + x]}" if x in ['a','b','c','d'] else x,
+            format_func=lambda x, q=question: f"{x}) {q['option_' + x]}",
             key=f"q_{qid}",
+            label_visibility="collapsed"
         )
     if st.button("Submit exam"):
         evaluate_exam(paper)
