@@ -115,8 +115,14 @@ def render_admin_panel():
                 st.error("Please upload a question file.")
             else:
                 try:
-                    if file.type == "text/csv" or file.name.endswith(".csv"):
-                        df = pd.read_csv(file)
+                        if file.type == "text/csv" or file.name.endswith(".csv"):
+                            df = pd.read_csv(
+                                file,
+                                engine="python",
+                                quotechar='"',
+                                skipinitialspace=True,
+                                on_bad_lines="warn",
+                            )
                     else:
                         df = pd.read_excel(file)
                     df.columns = df.columns.str.lower()
