@@ -422,15 +422,23 @@ def render_exam(paper):
         st.session_state.answers = {}
 
     duration = paper["duration_minutes"] or int(get_exam_setting("default_duration") or 30)
+    # Ensure duration is a valid integer
+    try:
+        duration = int(duration) if duration else 30
+    except (ValueError, TypeError):
+        duration = 30
+    
     end_time = st.session_state.started_at + pd.Timedelta(minutes=duration)
     remaining = end_time - datetime.now()
+    remaining_seconds = remaining.total_seconds()
     
-    if remaining.total_seconds() <= 0 or st.session_state.get("auto_submit"):
+    # Check for NaN or negative values
+    if not remaining_seconds or remaining_seconds <= 0 or st.session_state.get("auto_submit"):
         st.warning("Time is up or auto-submit triggered.")
         evaluate_exam(paper)
         return
     
-    minutes, seconds = divmod(int(remaining.total_seconds()), 60)
+    minutes, seconds = divmod(int(remaining_seconds), 60)
 
     st.markdown(f"### Time remaining: {minutes:02d}:{seconds:02d}")
     st.markdown("#### Camera-based proctoring and tab-change detection is active.")
