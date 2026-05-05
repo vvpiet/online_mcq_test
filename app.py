@@ -297,7 +297,7 @@ def render_student_panel():
         if not student:
             st.error("Student record not found. Contact admin.")
             return
-        if student["branch"] != branch or student["semester"] != semester or student["class"] != class_name:
+        if student["branch"] != BRANCHES[branch] or student["semester"] != semester or student["class"] != class_name:
             st.error("Selected branch / semester / class do not match the student record.")
             return
         if not student["password"]:
