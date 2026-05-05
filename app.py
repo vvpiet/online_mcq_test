@@ -156,7 +156,7 @@ def render_admin_panel():
                     if not all(col in df.columns for col in required):
                         st.error("Uploaded file must contain columns: question, a, b, c, d, answer")
                     else:
-                        paper_id = create_question_paper(paper_title, branch, semester, class_name, schedule_date, duration)
+                        paper_id = create_question_paper(paper_title, BRANCHES[branch], semester, class_name, schedule_date, duration)
                         for _, row in df.iterrows():
                             add_question(
                                 paper_id,
