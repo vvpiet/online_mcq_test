@@ -15,6 +15,20 @@ def get_conn():
     return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
 
 
+def _single_value(row, key=None):
+    if row is None:
+        return None
+    if isinstance(row, dict):
+        return row.get(key) if key else next(iter(row.values()), None)
+    try:
+        if key is not None and isinstance(row, (list, tuple)):
+            # fallback to first column if explicit key not available
+            return row[0]
+        return row[0]
+    except Exception:
+        return None
+
+
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode("utf-8")).hexdigest()
 
@@ -140,7 +154,8 @@ def get_admin_count() -> int:
         with conn.cursor() as cur:
             cur.execute("SELECT COUNT(*) FROM admins")
             row = cur.fetchone()
-            return row["count"] if row and "count" in row else 0
+            count = _single_value(row, "count")
+            return int(count) if count is not None else 0
 
 
 def add_allowed_network(prefix: str, description: str = None):
@@ -175,7 +190,8 @@ def get_exam_setting(key: str, default=None):
         with conn.cursor() as cur:
             cur.execute("SELECT value FROM exam_settings WHERE key=%s", (key,))
             row = cur.fetchone()
-            return row["value"] if row and "value" in row else default
+            value = _single_value(row, "value")
+            return value if value is not None else default
 
 
 def upsert_student(prn: str, name: str, class_name: str, branch: str, semester: int, password: str = None):
