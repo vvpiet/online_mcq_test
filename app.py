@@ -440,20 +440,19 @@ def render_exam(paper):
     
     minutes, seconds = divmod(int(remaining_seconds), 60)
 
+    # Display header with college name and logo
+    st.markdown("""
+    <div style='text-align: center; margin-bottom: 20px; border-bottom: 3px solid #0066cc; padding-bottom: 15px;'>
+        <h1 style='color: #0066cc; margin: 0;'>Vidya Vikas Pratishthan Institute of Engineering and Technology, Solapur</h1>
+        <h3 style='color: #333; margin: 5px 0;'>Online MCQ Examination Portal</h3>
+    </div>
+    """, unsafe_allow_html=True)
+    
     # Create a placeholder for the timer to update it dynamically
     timer_placeholder = st.empty()
     timer_placeholder.markdown(f"### ⏱️ Time remaining: {minutes:02d}:{seconds:02d}")
     st.markdown("#### Camera-based proctoring and tab-change detection is active.")
     components.html(get_proctor_html(), height=260)
-    
-    # Add auto-refresh using session state
-    if "last_update" not in st.session_state:
-        st.session_state.last_update = datetime.now()
-    
-    # Auto rerun every second to update timer
-    import time
-    time.sleep(1)
-    st.rerun()
     
     questions = get_questions_for_paper(paper["id"])
     responses = {}
@@ -477,8 +476,27 @@ def render_exam(paper):
             index=index,
             label_visibility="collapsed"
         )
+    
     if st.button("Submit exam"):
         evaluate_exam(paper)
+    
+    # Display footer with examination details
+    st.markdown("""
+    <div style='text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #ccc; color: #666; font-size: 12px;'>
+        <p><strong>Examination Coordinator & Head of Department:</strong><br>
+        Prof. Amir M. Usman Wagdarikar<br>
+        Head, Electronics & Telecommunication Engineering Department</p>
+        <p><strong>Senior Clerk - Examination:</strong><br>
+        Mr. Aadil Fazal Sayyed<br>
+        VVPIET, Solapur</p>
+        <p style='margin-top: 15px; color: #999;'><em>© Vidya Vikas Pratishthan Institute of Engineering and Technology, Solapur</em></p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Auto rerun every second to update timer (after questions are displayed)
+    import time
+    time.sleep(1)
+    st.rerun()
 
 
 def evaluate_exam(paper):
