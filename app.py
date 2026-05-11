@@ -282,9 +282,34 @@ def render_admin_panel():
 def get_proctor_html():
     return """
     <style>
-    #webcam-box {position:sticky; top:10px; right:10px; z-index:9999; width:260px; background:#111; color:#fff; padding:8px; border:2px solid #0066cc; border-radius:8px; float:right; margin:10px;}
-    #webcam-box video {width:240px; height:180px; border-radius:6px;}
-    #warning-text {font-weight:bold; color:#ff6666; margin-top:6px;}
+    body {
+      position: relative;
+    }
+    #webcam-box {
+      position: fixed;
+      top: 70px;
+      right: 20px;
+      z-index: 9999;
+      width: 260px;
+      background: #111;
+      color: #fff;
+      padding: 8px;
+      border: 2px solid #0066cc;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+    #webcam-box video {
+      width: 240px;
+      height: 180px;
+      border-radius: 6px;
+      display: block;
+    }
+    #warning-text {
+      font-weight: bold;
+      color: #ff6666;
+      margin-top: 6px;
+      font-size: 13px;
+    }
     </style>
     <div id="webcam-box">
       <div><strong>Proctoring camera</strong></div>
