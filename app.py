@@ -282,7 +282,7 @@ def render_admin_panel():
 def get_proctor_html():
     return """
     <style>
-    #webcam-box {position:fixed; top:10px; right:10px; z-index:9999; width:260px; background:#111; color:#fff; padding:8px; border:2px solid #0066cc; border-radius:8px;}
+    #webcam-box {position:sticky; top:10px; right:10px; z-index:9999; width:260px; background:#111; color:#fff; padding:8px; border:2px solid #0066cc; border-radius:8px; float:right; margin:10px;}
     #webcam-box video {width:240px; height:180px; border-radius:6px;}
     #warning-text {font-weight:bold; color:#ff6666; margin-top:6px;}
     </style>
@@ -440,9 +440,21 @@ def render_exam(paper):
     
     minutes, seconds = divmod(int(remaining_seconds), 60)
 
-    st.markdown(f"### Time remaining: {minutes:02d}:{seconds:02d}")
+    # Create a placeholder for the timer to update it dynamically
+    timer_placeholder = st.empty()
+    timer_placeholder.markdown(f"### ⏱️ Time remaining: {minutes:02d}:{seconds:02d}")
     st.markdown("#### Camera-based proctoring and tab-change detection is active.")
     components.html(get_proctor_html(), height=260)
+    
+    # Add auto-refresh using session state
+    if "last_update" not in st.session_state:
+        st.session_state.last_update = datetime.now()
+    
+    # Auto rerun every second to update timer
+    import time
+    time.sleep(1)
+    st.rerun()
+    
     questions = get_questions_for_paper(paper["id"])
     responses = {}
     for idx, question in enumerate(questions, 1):
